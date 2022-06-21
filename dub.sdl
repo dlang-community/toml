@@ -1,5 +1,5 @@
-name "toml"
-description "D implementation of TOML"
+name "toml-temp"
+description "D implementation of TOML (temporary)"
 authors "Kripth"
 license "MIT"
 subPackage "json"
