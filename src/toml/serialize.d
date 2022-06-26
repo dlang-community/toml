@@ -161,7 +161,7 @@ void serializeTOMLValue(T, Output)(T value, ref Output output)
 		v.append(output);
 	}
 	else
-		static assert(false, "TODO");
+		static assert(false, "TODO: serialize value type " ~ T.stringof ~ " not implemented");
 }
 
 unittest
