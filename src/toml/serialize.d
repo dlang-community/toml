@@ -40,7 +40,7 @@ template fieldName(alias field)
 }
 
 void serializeTOML(T, Output)(T value, ref Output output, string indent, string group)
-	if (isPlainStruct!T)
+	if (isPlainStruct!T && !is(T == MapT[string], MapT) && !is(T == SumType!Types, Types...))
 {
 	foreach (i, ref v; value.tupleof)
 	{{
@@ -114,7 +114,7 @@ void serializeTOML(T, Output)(T value, ref Output output, string indent, string 
 
 			static if (isValueSerializable!(typeof(part)))
 			{
-				static if (isStructArray!(typeof(v)))
+				static if (isStructArray!(typeof(part)))
 				{
 					auto deeperIndent = indent ~ oneIndentLevel;
 					auto deepGroup = group ~ "value.";
@@ -127,11 +127,19 @@ void serializeTOML(T, Output)(T value, ref Output output, string indent, string 
 						serializeTOML(arritem, output, deeperIndent,  deepGroup);
 					}
 				}
-				else
+				else static if (isValueSerializable!(typeof(part)))
 				{
 					output.put("value = ");
 					serializeTOMLValue(part, output);
 					output.put("\n");
+				}
+				else
+				{
+					output.put("[");
+					if (group.length)
+						output.put(group);
+					output.put("value]\n");
+					serializeTOML(part, output, indent ~ oneIndentLevel,  group ~ "value.");
 				}
 			}
 			else
@@ -146,10 +154,64 @@ void serializeTOML(T, Output)(T value, ref Output output, string indent, string 
 	);
 }
 
+void serializeTOML(T, Output)(T[string] data, ref Output output, string indent, string group)
+{
+	static if (isValueSerializable!T)
+	{
+		static if (isStructArray!T)
+		{
+			foreach (key, value; data)
+			{
+				if (indent.length)
+					output.put(indent);
+				output.put(key);
+				output.put(" = ");
+				serializeTOMLValue(value, output);
+				output.put("\n");
+			}
+		}
+		else
+		{
+			auto deeperIndent = v.length ? indent ~ oneIndentLevel : null;
+			foreach (key, value; data)
+			{
+				foreach (arritem; value)
+				{
+					output.put("\n");
+					if (indent.length)
+						output.put(indent);
+					output.put("[[");
+					if (group.length)
+						output.put(group);
+					output.put(key);
+					output.put("]]\n");
+					serializeTOML(arritem, output, deeperIndent, group ~ key ~ ".");
+				}
+			}
+		}
+	}
+	else
+	{
+		auto deeperIndent = indent ~ oneIndentLevel;
+		foreach (key, value; data)
+		{
+			output.put("\n");
+			if (indent.length)
+				output.put(indent);
+			output.put("[");
+			if (group.length)
+				output.put(group);
+			output.put(key);
+			output.put("]\n");
+			serializeTOML(value, output, deeperIndent, group ~ key ~ ".");
+		}
+	}
+}
+
 // format struct arrays as expanded fields
 enum isStructArray(T) = is(T == U[], U) && isPlainStruct!U;
 
-enum isPlainStruct(T) = is(T == struct) && !is(T == SumType!U, U...);
+enum isPlainStruct(T) = is(T == struct) || is(T == V[string], V);
 
 enum isValueSerializable(T) = !is(T == struct);
 
@@ -217,5 +279,53 @@ ports = [1337, 4242, 5555]
   host = "localhost"
   database = "mybot"
   port = 8080
+`, str);
+}
+
+unittest
+{
+	struct Property
+	{
+		SumType!(int, string) id;
+		SumType!(int, string)[] attributes;
+	}
+
+	Property[string] props = [
+		"href": Property(
+			SumType!(int, string)(1),
+			[SumType!(int, string)(1), SumType!(int, string)("foo")],
+		),
+		"base": Property(
+			SumType!(int, string)("bar"),
+			[SumType!(int, string)(44)],
+		)
+	];
+
+	auto str = serializeTOML(props);
+
+	assert(str == `
+[base]
+
+  [[base.attributes]]
+    kind = "int"
+    value = 44
+
+  [base.id]
+    kind = "string"
+    value = "bar"
+
+[href]
+
+  [[href.attributes]]
+    kind = "int"
+    value = 1
+
+  [[href.attributes]]
+    kind = "string"
+    value = "foo"
+
+  [href.id]
+    kind = "int"
+    value = 1
 `, str);
 }
