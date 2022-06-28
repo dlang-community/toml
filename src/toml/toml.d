@@ -71,7 +71,7 @@ struct TOMLDocument {
 		this(value.table);
 	}
 
-	public string toString() {
+	public string toString() const {
 		Appender!string appender;
 		foreach(key, value; this.table) {
 			appender.put(formatKey(key));
@@ -113,14 +113,14 @@ struct TOMLValue {
 		}
 	}
 	
-	public inout pure nothrow @property @safe @nogc TOML_TYPE type() {
+	public pure nothrow @property @safe @nogc TOML_TYPE type() const {
 		return this._type;
 	}
 	
 	/**
 	 * Throws: TOMLException if type is not TOML_TYPE.STRING
 	 */
-	public inout @property @trusted string str() {
+	public @property @trusted string str() const {
 		enforce!TOMLException(this._type == TOML_TYPE.STRING, "TOMLValue is not a string");
 		return this.store.str;
 	}
@@ -128,7 +128,7 @@ struct TOMLValue {
 	/**
 	 * Throws: TOMLException if type is not TOML_TYPE.INTEGER
 	 */
-	public inout @property @trusted long integer() {
+	public @property @trusted long integer() const {
 		enforce!TOMLException(this._type == TOML_TYPE.INTEGER, "TOMLValue is not an integer");
 		return this.store.integer;
 	}
@@ -136,15 +136,26 @@ struct TOMLValue {
 	/**
 	 * Throws: TOMLException if type is not TOML_TYPE.FLOAT
 	 */
-	public inout @property @trusted double floating() {
+	public @property @trusted double floating() const {
 		enforce!TOMLException(this._type == TOML_TYPE.FLOAT, "TOMLValue is not a float");
 		return this.store.floating;
 	}
 	
 	/**
+	 * Throws: TOMLException if type is not TOML_TYPE.TRUE or TOML_TYPE.FALSE
+	 */
+	public @property @trusted bool boolean() const {
+		switch (this._type) {
+			case TOML_TYPE.TRUE: return true;
+			case TOML_TYPE.FALSE: return false;
+			default: throw new TOMLException("TOMLValue is not a boolean");
+		}
+	}
+	
+	/**
 	 * Throws: TOMLException if type is not TOML_TYPE.OFFSET_DATETIME
 	 */
-	public @property ref SysTime offsetDatetime() return {
+	public @property ref inout(SysTime) offsetDatetime() return inout {
 		enforce!TOMLException(this.type == TOML_TYPE.OFFSET_DATETIME, "TOMLValue is not an offset datetime");
 		return this.store.offsetDatetime;
 	}
@@ -152,7 +163,7 @@ struct TOMLValue {
 	/**
 	 * Throws: TOMLException if type is not TOML_TYPE.LOCAL_DATETIME
 	 */
-	public @property @trusted ref DateTime localDatetime() return {
+	public @property @trusted ref inout(DateTime) localDatetime() return inout {
 		enforce!TOMLException(this._type == TOML_TYPE.LOCAL_DATETIME, "TOMLValue is not a local datetime");
 		return this.store.localDatetime;
 	}
@@ -160,7 +171,7 @@ struct TOMLValue {
 	/**
 	 * Throws: TOMLException if type is not TOML_TYPE.LOCAL_DATE
 	 */
-	public @property @trusted ref Date localDate() return {
+	public @property @trusted ref inout(Date) localDate() return inout {
 		enforce!TOMLException(this._type == TOML_TYPE.LOCAL_DATE, "TOMLValue is not a local date");
 		return this.store.localDate;
 	}
@@ -168,7 +179,7 @@ struct TOMLValue {
 	/**
 	 * Throws: TOMLException if type is not TOML_TYPE.LOCAL_TIME
 	 */
-	public @property @trusted ref TimeOfDay localTime() return {
+	public @property @trusted ref inout(TimeOfDay) localTime() return inout {
 		enforce!TOMLException(this._type == TOML_TYPE.LOCAL_TIME, "TOMLValue is not a local time");
 		return this.store.localTime;
 	}
@@ -176,7 +187,7 @@ struct TOMLValue {
 	/**
 	 * Throws: TOMLException if type is not TOML_TYPE.ARRAY
 	 */
-	public @property @trusted ref TOMLValue[] array() return {
+	public @property @trusted ref inout(TOMLValue[]) array() return inout {
 		enforce!TOMLException(this._type == TOML_TYPE.ARRAY, "TOMLValue is not an array");
 		return this.store.array;
 	}
@@ -184,20 +195,20 @@ struct TOMLValue {
 	/**
 	 * Throws: TOMLException if type is not TOML_TYPE.TABLE
 	 */
-	public @property @trusted ref TOMLValue[string] table() return {
+	public @property @trusted ref inout(TOMLValue[string]) table() return inout {
 		enforce!TOMLException(this._type == TOML_TYPE.TABLE, "TOMLValue is not a table");
 		return this.store.table;
 	}
 
-	public TOMLValue opIndex(size_t index) {
+	public inout(TOMLValue) opIndex(size_t index) inout {
 		return this.array[index];
 	}
 
-	public TOMLValue* opBinaryRight(string op : "in")(string key) {
+	public inout(TOMLValue)* opBinaryRight(string op : "in")(string key) inout {
 		return key in this.table;
 	}
 
-	public TOMLValue opIndex(string key) {
+	public inout(TOMLValue) opIndex(string key) inout {
 		return this.table[key];
 	}
 
@@ -282,7 +293,7 @@ struct TOMLValue {
 		}
 	}
 
-	public bool opEquals(T)(T value) {
+	public bool opEquals(T)(T value) const {
 		static if(is(T == TOMLValue)) {
 			if(this._type != value._type) return false;
 			final switch(this.type) with(TOML_TYPE) {
@@ -336,7 +347,36 @@ struct TOMLValue {
 		}
 	}
 
-	public inout void append(Output)(ref Output appender) {
+	size_t toHash() const @nogc pure nothrow
+	{
+		final switch (_type) with (TOML_TYPE)
+		{
+			case STRING:
+				return hashOf(store.str);
+			case INTEGER:
+				return hashOf(store.integer);
+			case FLOAT:
+				return hashOf(store.floating);
+			case OFFSET_DATETIME:
+				return hashOf(store.offsetDatetime);
+			case LOCAL_DATETIME:
+				return hashOf(store.localDatetime);
+			case LOCAL_DATE:
+				return hashOf(store.localDate);
+			case LOCAL_TIME:
+				return hashOf(store.localTime);
+			case ARRAY:
+				return hashOf(store.array);
+			case TABLE:
+				return hashOf(store.table);
+			case TRUE:
+				return hashOf(true);
+			case FALSE:
+				return hashOf(false);
+		}
+	}
+
+	public void append(Output)(ref Output appender) const {
 		final switch(this._type) with(TOML_TYPE) {
 			case STRING:
 				appender.put(formatString(this.store.str));
@@ -390,7 +430,7 @@ struct TOMLValue {
 		}
 	}
 
-	public inout string toString() {
+	public string toString() const {
 		Appender!string appender;
 		this.append(appender);
 		return appender.data;
@@ -398,14 +438,14 @@ struct TOMLValue {
 
 }
 
-private string formatKey(string str) {
+private string formatKey(scope return string str) {
 	foreach(c ; str) {
 		if((c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z') && c != '-' && c != '_') return formatString(str);
 	}
 	return str;
 }
 
-private string formatString(string str) {
+private inout(char)[] formatString(scope return inout(char)[] str) {
 	Appender!string appender;
 	foreach(c ; str) {
 		switch(c) {
@@ -419,7 +459,7 @@ private string formatString(string str) {
 			default: appender.put(c);
 		}
 	}
-	return "\"" ~ appender.data ~ "\"";
+	return cast(typeof(return))("\"" ~ appender.data ~ "\"");
 }
 
 /**
@@ -1491,33 +1531,33 @@ trimmed in raw strings.
 
 	// opEquals
 
-	assert(TOMLValue(true) == TOMLValue(true));
-	assert(TOMLValue("string") == TOMLValue("string"));
-	assert(TOMLValue(0) == TOMLValue(0));
-	assert(TOMLValue(.0) == TOMLValue(.0));
-	assert(TOMLValue(SysTime.fromISOExtString("1979-05-27T00:32:00-07:00")) == TOMLValue(SysTime.fromISOExtString("1979-05-27T00:32:00-07:00")));
-	assert(TOMLValue(DateTime.fromISOExtString("1979-05-27T07:32:00")) == TOMLValue(DateTime.fromISOExtString("1979-05-27T07:32:00")));
-	assert(TOMLValue(Date.fromISOExtString("1979-05-27")) == TOMLValue(Date.fromISOExtString("1979-05-27")));
-	assert(TOMLValue(TimeOfDay.fromISOExtString("07:32:00")) == TOMLValue(TimeOfDay.fromISOExtString("07:32:00")));
-	assert(TOMLValue([1, 2, 3]) == TOMLValue([1, 2, 3]));
-	assert(TOMLValue(["a": 0, "b": 1]) == TOMLValue(["a": 0, "b": 1]));
+	assert(const TOMLValue(true) == TOMLValue(true));
+	assert(const TOMLValue("string") == TOMLValue("string"));
+	assert(const TOMLValue(0) == TOMLValue(0));
+	assert(const TOMLValue(.0) == TOMLValue(.0));
+	assert(const TOMLValue(SysTime.fromISOExtString("1979-05-27T00:32:00-07:00")) == TOMLValue(SysTime.fromISOExtString("1979-05-27T00:32:00-07:00")));
+	assert(const TOMLValue(DateTime.fromISOExtString("1979-05-27T07:32:00")) == TOMLValue(DateTime.fromISOExtString("1979-05-27T07:32:00")));
+	assert(const TOMLValue(Date.fromISOExtString("1979-05-27")) == TOMLValue(Date.fromISOExtString("1979-05-27")));
+	assert(const TOMLValue(TimeOfDay.fromISOExtString("07:32:00")) == TOMLValue(TimeOfDay.fromISOExtString("07:32:00")));
+	assert(const TOMLValue([1, 2, 3]) == TOMLValue([1, 2, 3]));
+	assert(const TOMLValue(["a": 0, "b": 1]) == TOMLValue(["a": 0, "b": 1]));
 
 	// toString()
 
 	assert(TOMLDocument(["test": TOMLValue(0)]).toString() == "test = 0" ~ newline);
 
-	assert(TOMLValue(true).toString() == "true");
-	assert(TOMLValue("string").toString() == "\"string\"");
-	assert(TOMLValue("\"quoted \\ \b \f \r\n \t string\"").toString() == "\"\\\"quoted \\\\ \\b \\f \\r\\n \\t string\\\"\"");
-	assert(TOMLValue(42).toString() == "42");
-	assert(TOMLValue(99.44).toString() == "99.44");
-	assert(TOMLValue(.0).toString() == "0.0");
-	assert(TOMLValue(1e100).toString() == "1e+100");
-	assert(TOMLValue(SysTime.fromISOExtString("1979-05-27T00:32:00-07:00")).toString() == "1979-05-27T00:32:00-07:00");
-	assert(TOMLValue(DateTime.fromISOExtString("1979-05-27T07:32:00")).toString() == "1979-05-27T07:32:00");
-	assert(TOMLValue(Date.fromISOExtString("1979-05-27")).toString() == "1979-05-27");
-	assert(TOMLValue(TimeOfDay.fromISOExtString("07:32:00.999999")).toString() == "07:32:00.999999");
-	assert(TOMLValue([1, 2, 3]).toString() == "[1, 2, 3]");
+	assert((const TOMLValue(true)).toString() == "true");
+	assert((const TOMLValue("string")).toString() == "\"string\"");
+	assert((const TOMLValue("\"quoted \\ \b \f \r\n \t string\"")).toString() == "\"\\\"quoted \\\\ \\b \\f \\r\\n \\t string\\\"\"");
+	assert((const TOMLValue(42)).toString() == "42");
+	assert((const TOMLValue(99.44)).toString() == "99.44");
+	assert((const TOMLValue(.0)).toString() == "0.0");
+	assert((const TOMLValue(1e100)).toString() == "1e+100");
+	assert((const TOMLValue(SysTime.fromISOExtString("1979-05-27T00:32:00-07:00"))).toString() == "1979-05-27T00:32:00-07:00");
+	assert((const TOMLValue(DateTime.fromISOExtString("1979-05-27T07:32:00"))).toString() == "1979-05-27T07:32:00");
+	assert((const TOMLValue(Date.fromISOExtString("1979-05-27"))).toString() == "1979-05-27");
+	assert((const TOMLValue(TimeOfDay.fromISOExtString("07:32:00.999999"))).toString() == "07:32:00.999999");
+	assert((const TOMLValue([1, 2, 3])).toString() == "[1, 2, 3]");
 	immutable table = TOMLValue(["a": 0, "b": 1]).toString();
 	assert(table == "{ a = 0, b = 1 }" || table == "{ b = 1, a = 0 }");
 
