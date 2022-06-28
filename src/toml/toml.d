@@ -336,7 +336,7 @@ struct TOMLValue {
 		}
 	}
 
-	public inout void append(ref Appender!string appender) {
+	public inout void append(Output)(ref Output appender) {
 		final switch(this._type) with(TOML_TYPE) {
 			case STRING:
 				appender.put(formatString(this.store.str));
