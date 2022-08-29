@@ -1,14 +1,14 @@
 // Written in the D programming language.
 
 /**
- * 
+ *
  * Custom types for TOML's datetimes that add fractional time to D ones.
  *
  * License: $(HTTP https://github.com/Kripth/toml/blob/master/LICENSE, MIT)
  * Authors: Kripth
  * References: $(LINK https://github.com/toml-lang/toml/blob/master/README.md)
  * Source: $(HTTP https://github.com/Kripth/toml/blob/master/src/toml/datetime.d, toml/_datetime.d)
- * 
+ *
  */
 module toml.datetime;
 
