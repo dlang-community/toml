@@ -3,3 +3,22 @@ description "D implementation of TOML (temporary)"
 authors "Kripth"
 license "MIT"
 subPackage "json"
+
+
+configuration "library" {
+   sourcePaths "src"
+}
+
+configuration "unittest" {
+   targetName "ut"
+   targetType "executable"
+   mainSourceFile "tests/ut_main.d"
+  
+   sourcePaths "tests"
+   importPaths "tests"
+
+   dependency "unit-threaded" version="~>2.0.5"
+}
+
+configuration "ut_def" {
+}
