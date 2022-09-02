@@ -1,6 +1,6 @@
-name "toml-temp"
-description "D implementation of TOML (temporary)"
-authors "Kripth"
+name "toml"
+description "D implementation of TOML "
+authors "Kripth" "Orfeo Da Vià" "WebFreak001"
 license "MIT"
 subPackage "json"
 
@@ -13,7 +13,7 @@ configuration "unittest" {
    targetName "ut"
    targetType "executable"
    mainSourceFile "tests/ut_main.d"
-  
+
    sourcePaths "tests"
    importPaths "tests"
 
