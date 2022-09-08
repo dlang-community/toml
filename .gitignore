@@ -9,3 +9,14 @@
 *.lib
 dub.selections.json
 .vim-bookmarks
+build/
+libtoml.a
+toml_decoder/.ninja_deps
+toml_decoder/.ninja_log
+toml_decoder/.reggae/
+toml_decoder/Tupfile
+toml_decoder/build.ninja
+toml_decoder/build/
+toml_decoder/compile_commands.json
+toml_decoder/dtoml_dec
+toml_decoder/rules.ninja
