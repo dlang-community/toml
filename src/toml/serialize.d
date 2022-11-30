@@ -3,8 +3,20 @@ module toml.serialize;
 import toml.toml;
 
 import std.array;
-import std.sumtype;
 import std.traits;
+
+static if (__VERSION__ >= 2097)
+{
+   import std.sumtype;
+   private enum hasSumType = true;
+}
+else
+{
+   private struct SumType(Types...)
+   {
+   }
+   private enum hasSumType = false;
+}
 
 // UDAs:
 struct tomlName {
@@ -92,7 +104,7 @@ if (isPlainStruct!T && !is(T == MapT[string], MapT) && !is(T == SumType!Types, T
    }
 }
 
-void serializeTOML(T, Output)(T value, ref Output output, string indent, string group) if (is(T == SumType!Types, Types...)) {
+void serializeTOML(T, Output)(T value, ref Output output, string indent, string group) if (hasSumType && is(T == SumType!Types, Types...)) {
    if (indent.length)
       output.put(indent);
    output.put("kind = ");
@@ -240,6 +252,7 @@ ports = [1337, 4242, 5555]
 }
 
 @safe
+static if (hasSumType)
 unittest {
    struct Property {
       SumType!(int, string) id;

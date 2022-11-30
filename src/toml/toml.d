@@ -20,7 +20,7 @@ import std.datetime : Date, DateTimeD = DateTime, SysTime, TimeOfDayD = TimeOfDa
 import std.exception : assertThrown, enforce;
 import std.string : indexOf, join, replace, strip;
 import std.traits : isArray, isAssociativeArray, isFloatingPoint, isIntegral, isNumeric, KeyType;
-import std.typecons : Tuple;
+import std.typecons : Tuple, tuple;
 import std.utf : encode, UseReplacementDchar;
 
 import toml.datetime : DateTime, TimeOfDay;
@@ -229,30 +229,40 @@ struct TOMLValue {
       return result;
    };
 
-   public int opApply(scope int delegate(string,       ref       TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string, scope ref       TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   dg)      @safe const        { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   dg)      @safe const        { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string,       ref       TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string, scope ref       TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   pure dg) @safe pure const   { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   pure dg) @safe pure const   { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string,       ref       TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string,       ref const TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string, scope ref       TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string, scope ref const TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string,       ref const TOMLValue) @system dg)      @system const      { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string, scope ref const TOMLValue) @system dg)      @system const      { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string,       ref       TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string,       ref const TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string, scope ref       TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string, scope ref const TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string,       ref const TOMLValue) @system pure dg) @system pure const { mixin(opApplyImpl); }
-   public int opApply(scope int delegate(string, scope ref const TOMLValue) @system pure dg) @system pure const { mixin(opApplyImpl); }
+   static if (__VERSION__ >= 2099)
+   {
+      public int opApply(scope int delegate(string,       ref       TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string, scope ref       TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   dg)      @safe const        { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   dg)      @safe const        { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string,       ref       TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string, scope ref       TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   pure dg) @safe pure const   { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   pure dg) @safe pure const   { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string,       ref       TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string,       ref const TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string, scope ref       TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string, scope ref const TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string,       ref const TOMLValue) @system dg)      @system const      { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string, scope ref const TOMLValue) @system dg)      @system const      { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string,       ref       TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string,       ref const TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string, scope ref       TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string, scope ref const TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string,       ref const TOMLValue) @system pure dg) @system pure const { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string, scope ref const TOMLValue) @system pure dg) @system pure const { mixin(opApplyImpl); }
+   }
+   else
+   {
+      public int opApply(scope int delegate(string, ref       TOMLValue) @system dg) @system       { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string, ref       TOMLValue) @safe dg)   @safe         { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string, ref const TOMLValue) @system dg) @system const { mixin(opApplyImpl); }
+      public int opApply(scope int delegate(string, ref const TOMLValue) @safe dg)   @safe const   { mixin(opApplyImpl); }
+   }
 
    public void opAssign(T)(T value) pure {
       this.assign(value);
@@ -417,7 +427,10 @@ struct TOMLValue {
          case OFFSET_DATETIME:
             return hashOf(store.offsetDatetime);
          case LOCAL_DATETIME:
-            return hashOf(store.localDatetime);
+            static if (__traits(compiles, () @nogc { hashOf(store.localDatetime); }))
+               return hashOf(store.localDatetime);
+            else
+               return hashOf(tuple(store.localDatetime.date, store.localDatetime.timeOfDay));
          case LOCAL_DATE:
             return hashOf(store.localDate);
          case LOCAL_TIME:
