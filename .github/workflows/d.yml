@@ -27,6 +27,10 @@ jobs:
         - ldc-latest
         - ldc-1.27.0
         - ldc-1.23.0
+        exclude:
+        # linker errors with unit-threaded on dmd-latest with 2.101 for some reason
+        - os: windows-latest
+          dc: dmd-latest
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
