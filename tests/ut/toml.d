@@ -5,7 +5,7 @@ import unit_threaded;
 import toml;
 import std.ascii : newline;
 import std.exception : enforce, assertThrown;
-import std.math : isNaN, isFinite;
+import std.math : isNaN, isFinite, isClose;
 import std.conv : to;
 
 @("complete")
@@ -295,7 +295,7 @@ unittest {
    assert(doc["flt4"] == 5e+22);
    assert(doc["flt5"] == 1e6);
    assert(doc["flt6"] == -2E-2);
-   assert(doc["flt7"] == 6.626e-34);
+   assert(doc["flt7"].floating.isClose(6.626e-34));
 
    doc = parseTOML(`flt8 = 9_224_617.445_991_228_313`);
    assert(doc["flt8"] == 9_224_617.445_991_228_313);
