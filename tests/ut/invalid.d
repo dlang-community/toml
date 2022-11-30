@@ -7,6 +7,7 @@ import toml;
 // based on https://github.com/BurntSushi
 @ShouldFail("to be fixed")
 @Name("after-array")
+@safe
 unittest {
    enum T = `[[agencies]] owner = "S Cjelli"`;
    parseTOML(T).shouldThrow;
@@ -14,6 +15,7 @@ unittest {
 
 
 @("duplicate")
+@safe
 unittest {
    enum T = `# DO NOT DO THIS
       name = "Tom"
@@ -25,6 +27,7 @@ unittest {
 //tests/invalid/table/duplicate-key-dotted-table.toml
 @ShouldFail("to be fixed")
 @("duplicate-key")
+@safe
 unittest {
    enum T = `
       [fruit]

@@ -20,13 +20,15 @@ struct DateTime {
    public Date date;
    public TimeOfDay timeOfDay;
 
-   public inout @property DateTimeD dateTime() {
+@safe scope:
+
+   public pure inout @property DateTimeD dateTime() {
       return DateTimeD(this.date, this.timeOfDay.timeOfDay);
    }
 
    alias dateTime this;
 
-   public static pure DateTime fromISOExtString(string str) {
+   public static pure DateTime fromISOExtString(scope const(char)[] str) {
       Duration frac;
       if (str.length > 19 && str[19] == '.') {
          frac = dur!"msecs"(to!ulong(str[20 .. $]));
@@ -36,7 +38,7 @@ struct DateTime {
       return DateTime(dt.date, TimeOfDay(dt.timeOfDay, frac));
    }
 
-   public inout string toISOExtString() {
+   public pure inout string toISOExtString() {
       return this.date.toISOExtString() ~ "T" ~ this.timeOfDay.toString();
    }
 
@@ -47,9 +49,11 @@ struct TimeOfDay {
    public TimeOfDayD timeOfDay;
    public Duration fracSecs;
 
+@safe scope:
+
    alias timeOfDay this;
 
-   public static pure TimeOfDay fromISOExtString(string str) {
+   public static pure TimeOfDay fromISOExtString(scope const(char)[] str) {
       Duration frac;
       if (str.length > 8 && str[8] == '.') {
          frac = dur!"msecs"(to!ulong(str[9 .. $]));
@@ -58,7 +62,7 @@ struct TimeOfDay {
       return TimeOfDay(TimeOfDayD.fromISOExtString(str), frac);
    }
 
-   public inout string toISOExtString() {
+   public pure inout string toISOExtString() {
       immutable msecs = this.fracSecs.total!"msecs";
       if (msecs != 0) {
          return this.timeOfDay.toISOExtString() ~ "." ~ to!string(msecs);

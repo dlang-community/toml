@@ -14,13 +14,13 @@ struct tomlName {
 enum tomlIgnored;
 // ---
 
-string serializeTOML(T)(T value) {
+string serializeTOML(T)(T value) @safe {
    auto ret = appender!string;
    serializeTOML(value, ret);
    return ret.data;
 }
 
-void serializeTOML(T, Output)(T value, ref Output output) {
+void serializeTOML(T, Output)(T value, ref Output output) @safe {
    serializeTOML(value, output, "", "");
 }
 
@@ -40,7 +40,8 @@ template fieldName(alias field) {
 }
 
 void serializeTOML(T, Output)(T value, ref Output output, string indent, string group)
-      if (isPlainStruct!T && !is(T == MapT[string], MapT) && !is(T == SumType!Types, Types...)) {
+@safe
+if (isPlainStruct!T && !is(T == MapT[string], MapT) && !is(T == SumType!Types, Types...)) {
    foreach (i, ref v; value.tupleof) {
       {
          static if (isValueSerializable!(typeof(v)) && getUDAs!(value.tupleof[i], tomlIgnored).length == 0 && !isStructArray!(typeof(v))) {
@@ -184,7 +185,7 @@ enum isPlainStruct(T) = is(T == struct) || is(T == V[string], V);
 
 enum isValueSerializable(T) = !is(T == struct);
 
-void serializeTOMLValue(T, Output)(T value, ref Output output) {
+void serializeTOMLValue(T, Output)(T value, ref Output output) @safe {
    static if (__traits(compiles, { auto v = TOMLValue(value); })) {
       auto v = TOMLValue(value);
       v.append(output);
@@ -192,6 +193,7 @@ void serializeTOMLValue(T, Output)(T value, ref Output output) {
       static assert(false, "TODO: serialize value type " ~ T.stringof ~ " not implemented");
 }
 
+@safe
 unittest {
    struct Database {
       string host;
@@ -235,22 +237,23 @@ ports = [1337, 4242, 5555]
   database = "mybot"
   port = 8080
 `, str);
+}
+
+@safe
+unittest {
+   struct Property {
+      SumType!(int, string) id;
+      SumType!(int, string)[] attributes;
    }
 
-   unittest {
-      struct Property {
-         SumType!(int, string) id;
-         SumType!(int, string)[] attributes;
-      }
+   Property[string] props = [
+      "href": Property(SumType!(int, string)(1), [SumType!(int, string)(1), SumType!(int, string)("foo")],),
+      "base": Property(SumType!(int, string)("bar"), [SumType!(int, string)(44)],)
+   ];
 
-      Property[string] props = [
-         "href": Property(SumType!(int, string)(1), [SumType!(int, string)(1), SumType!(int, string)("foo")],),
-         "base": Property(SumType!(int, string)("bar"), [SumType!(int, string)(44)],)
-      ];
+   auto str = serializeTOML(props);
 
-      auto str = serializeTOML(props);
-
-      assert(str == `
+   assert(str == `
 [base]
 
   [[base.attributes]]
@@ -275,4 +278,4 @@ ports = [1337, 4242, 5555]
     kind = "int"
     value = 1
 `, str);
-   }
+}

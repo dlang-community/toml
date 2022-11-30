@@ -4,7 +4,6 @@ authors "Kripth" "Orfeo Da Vià" "WebFreak001"
 license "MIT"
 subPackage "json"
 
-
 configuration "library" {
    sourcePaths "src"
 }
@@ -13,6 +12,8 @@ configuration "unittest" {
    targetName "ut"
    targetType "executable"
    mainSourceFile "tests/ut_main.d"
+
+   dflags "-dip1000"
 
    sourcePaths "tests"
    importPaths "tests"

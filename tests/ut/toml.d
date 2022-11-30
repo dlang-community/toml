@@ -9,6 +9,7 @@ import std.math : isNaN, isFinite;
 import std.conv : to;
 
 @("complete")
+@safe
 unittest {
    TOMLDocument doc;
 
@@ -65,6 +66,7 @@ unittest {
 }
 
 @("comment")
+@safe
 unittest {
    TOMLDocument doc;
 
@@ -86,6 +88,7 @@ unittest {
 }
 
 @("bare keys")
+@safe
 unittest {
    TOMLDocument doc;
    // bare keys
@@ -101,6 +104,7 @@ unittest {
    doc["1234"].should == "value";
 }
 @("quoted keys")
+@safe
 unittest {
    TOMLDocument doc;
 
@@ -136,6 +140,7 @@ unittest {
    assert(doc["site"]["google.com"] == true);
 }
 @("string")
+@safe
 unittest {
    TOMLDocument doc;
    // basic strings
@@ -187,6 +192,7 @@ The quick brown \
 }
 
 @("multi-line")
+@safe
 unittest {
    TOMLDocument doc;
    // dfmt off
@@ -207,6 +213,7 @@ trimmed in raw strings.
 }
 
 @("integer")
+@safe
 unittest {
    TOMLDocument doc;
    doc = parseTOML(`
@@ -651,6 +658,30 @@ unittest {
    assert(table == "{ a = 0, b = 1 }" || table == "{ b = 1, a = 0 }");
 
    foreach (k, v; TOMLValue(["0": 0, "1": 1])) {
+      assert(v == k.to!int);
+   }
+
+   foreach (k, scope v; TOMLValue(["0": 0, "1": 1])) {
+      assert(v == k.to!int);
+   }
+
+   foreach (k, scope const v; TOMLValue(["0": 0, "1": 1])) {
+      assert(v == k.to!int);
+   }
+
+   foreach (k, scope ref v; TOMLValue(["0": 0, "1": 1])) {
+      assert(v == k.to!int);
+   }
+
+   foreach (k, const v; const(TOMLValue)(["0": 0, "1": 1])) {
+      assert(v == k.to!int);
+   }
+
+   foreach (k, ref const v; const(TOMLValue)(["0": 0, "1": 1])) {
+      assert(v == k.to!int);
+   }
+
+   foreach (k, scope ref const v; const(TOMLValue)(["0": 0, "1": 1])) {
       assert(v == k.to!int);
    }
 

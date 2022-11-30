@@ -15,11 +15,11 @@ module toml.toml;
 import std.algorithm : canFind, min, stripRight;
 import std.array : Appender;
 import std.ascii : newline;
-import std.conv : to;
-import std.datetime : SysTime, DateTimeD = DateTime, Date, TimeOfDayD = TimeOfDay;
-import std.exception : enforce, assertThrown;
-import std.string : join, strip, replace, indexOf;
-import std.traits : isNumeric, isIntegral, isFloatingPoint, isArray, isAssociativeArray, KeyType;
+import std.conv : text, to;
+import std.datetime : Date, DateTimeD = DateTime, SysTime, TimeOfDayD = TimeOfDay;
+import std.exception : assertThrown, enforce;
+import std.string : indexOf, join, replace, strip;
+import std.traits : isArray, isAssociativeArray, isFloatingPoint, isIntegral, isNumeric, KeyType;
 import std.typecons : Tuple;
 import std.utf : encode, UseReplacementDchar;
 
@@ -61,11 +61,13 @@ struct TOMLDocument {
 
    public TOMLValue[string] table;
 
-   public this(TOMLValue[string] table) {
+@safe scope:
+
+   public this(TOMLValue[string] table) pure {
       this.table = table;
    }
 
-   public this(TOMLValue value) {
+   public this(TOMLValue value) pure {
       this(value.table);
    }
 
@@ -104,6 +106,8 @@ struct TOMLValue {
    private Store store;
    private TOML_TYPE _type;
 
+@safe scope:
+
    public this(T)(T value) {
       static if (is(T == TOML_TYPE)) {
          this._type = value;
@@ -112,14 +116,14 @@ struct TOMLValue {
       }
    }
 
-   public pure nothrow @property @safe @nogc TOML_TYPE type() const {
+   public pure nothrow @property @safe @nogc TOML_TYPE type() return const {
       return this._type;
    }
 
    /**
     * Throws: TOMLException if type is not TOML_TYPE.STRING
     */
-   public @property @trusted string str() const {
+   public @property @trusted string str() return const pure {
       enforce!TOMLException(this._type == TOML_TYPE.STRING, "TOMLValue is not a string");
       return this.store.str;
    }
@@ -127,7 +131,7 @@ struct TOMLValue {
    /**
     * Throws: TOMLException if type is not TOML_TYPE.INTEGER
     */
-   public @property @trusted long integer() const {
+   public @property @trusted long integer() return const pure {
       enforce!TOMLException(this._type == TOML_TYPE.INTEGER, "TOMLValue is not an integer");
       return this.store.integer;
    }
@@ -135,7 +139,7 @@ struct TOMLValue {
    /**
     * Throws: TOMLException if type is not TOML_TYPE.FLOAT
     */
-   public @property @trusted double floating() const {
+   public @property @trusted double floating() return const pure {
       enforce!TOMLException(this._type == TOML_TYPE.FLOAT, "TOMLValue is not a float");
       return this.store.floating;
    }
@@ -143,7 +147,7 @@ struct TOMLValue {
    /**
     * Throws: TOMLException if type is not TOML_TYPE.TRUE or TOML_TYPE.FALSE
     */
-   public @property @trusted bool boolean() const {
+   public @property @trusted bool boolean() return const pure {
       switch (this._type) {
          case TOML_TYPE.TRUE:
             return true;
@@ -157,7 +161,7 @@ struct TOMLValue {
    /**
     * Throws: TOMLException if type is not TOML_TYPE.OFFSET_DATETIME
     */
-   public @property ref inout(SysTime) offsetDatetime() return inout {
+   public @property @trusted ref inout(SysTime) offsetDatetime() return inout pure {
       enforce!TOMLException(this.type == TOML_TYPE.OFFSET_DATETIME, "TOMLValue is not an offset datetime");
       return this.store.offsetDatetime;
    }
@@ -165,7 +169,7 @@ struct TOMLValue {
    /**
     * Throws: TOMLException if type is not TOML_TYPE.LOCAL_DATETIME
     */
-   public @property @trusted ref inout(DateTime) localDatetime() return inout {
+   public @property @trusted ref inout(DateTime) localDatetime() return inout pure {
       enforce!TOMLException(this._type == TOML_TYPE.LOCAL_DATETIME, "TOMLValue is not a local datetime");
       return this.store.localDatetime;
    }
@@ -173,7 +177,7 @@ struct TOMLValue {
    /**
     * Throws: TOMLException if type is not TOML_TYPE.LOCAL_DATE
     */
-   public @property @trusted ref inout(Date) localDate() return inout {
+   public @property @trusted ref inout(Date) localDate() return inout pure {
       enforce!TOMLException(this._type == TOML_TYPE.LOCAL_DATE, "TOMLValue is not a local date");
       return this.store.localDate;
    }
@@ -181,7 +185,7 @@ struct TOMLValue {
    /**
     * Throws: TOMLException if type is not TOML_TYPE.LOCAL_TIME
     */
-   public @property @trusted ref inout(TimeOfDay) localTime() return inout {
+   public @property @trusted ref inout(TimeOfDay) localTime() return inout pure {
       enforce!TOMLException(this._type == TOML_TYPE.LOCAL_TIME, "TOMLValue is not a local time");
       return this.store.localTime;
    }
@@ -189,7 +193,7 @@ struct TOMLValue {
    /**
     * Throws: TOMLException if type is not TOML_TYPE.ARRAY
     */
-   public @property @trusted ref inout(TOMLValue[]) array() return inout {
+   public @property @trusted ref inout(TOMLValue[]) array() return inout pure {
       enforce!TOMLException(this._type == TOML_TYPE.ARRAY, "TOMLValue is not an array");
       return this.store.array;
    }
@@ -197,40 +201,64 @@ struct TOMLValue {
    /**
     * Throws: TOMLException if type is not TOML_TYPE.TABLE
     */
-   public @property @trusted ref inout(TOMLValue[string]) table() return inout {
+   public @property @trusted ref inout(TOMLValue[string]) table() return inout pure {
       enforce!TOMLException(this._type == TOML_TYPE.TABLE, "TOMLValue is not a table");
       return this.store.table;
    }
 
-   public inout(TOMLValue) opIndex(size_t index) inout {
+   public inout(TOMLValue) opIndex(size_t index) return inout pure {
       return this.array[index];
    }
 
-   public inout(TOMLValue)* opBinaryRight(string op : "in")(string key) inout {
+   public inout(TOMLValue)* opBinaryRight(string op : "in")(string key) return inout pure {
       return key in this.table;
    }
 
-   public inout(TOMLValue) opIndex(string key) inout {
+   public inout(TOMLValue) opIndex(string key) return inout pure {
       return this.table[key];
    }
 
-   public int opApply(scope int delegate(string, ref TOMLValue) dg) {
-      enforce!TOMLException(this._type == TOML_TYPE.TABLE, "TOMLValue is not a table");
+   private static enum opApplyImpl = q{
       int result;
-      foreach (string key, ref value; this.store.table) {
+      foreach (string key, ref value; this.table) {
          result = dg(key, value);
          if (result) {
             break;
          }
       }
       return result;
-   }
+   };
 
-   public void opAssign(T)(T value) {
+   public int opApply(scope int delegate(string,       ref       TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref       TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   dg)      @safe const        { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   dg)      @safe const        { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref       TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref       TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   pure dg) @safe pure const   { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   pure dg) @safe pure const   { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref       TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref       TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @system dg)      @system const      { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @system dg)      @system const      { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref       TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref       TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @system pure dg) @system pure const { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @system pure dg) @system pure const { mixin(opApplyImpl); }
+
+   public void opAssign(T)(T value) pure {
       this.assign(value);
    }
 
-   private void assign(T)(T value) {
+   private void assign(T)(T value) @trusted pure {
       static if (is(T == TOMLValue)) {
          this.store = value.store;
          this._type = value._type;
@@ -297,7 +325,7 @@ struct TOMLValue {
       }
    }
 
-   public bool opEquals(T)(T value) const {
+   public bool opEquals(T)(scope T value) const @trusted pure {
       static if (is(T == TOMLValue)) {
          if (this._type != value._type) {
             return false;
@@ -378,7 +406,7 @@ struct TOMLValue {
       }
    }
 
-   size_t toHash() const @nogc pure nothrow {
+   size_t toHash() const @trusted @nogc pure nothrow {
       final switch (_type) with (TOML_TYPE) {
          case STRING:
             return hashOf(store.str);
@@ -405,7 +433,7 @@ struct TOMLValue {
       }
    }
 
-   public void append(Output)(ref Output appender) const {
+   public void append(Output)(scope ref Output appender) const @trusted {
       final switch (this._type) with (TOML_TYPE) {
          case STRING:
             appender.put(formatString(this.store.str));
@@ -473,7 +501,7 @@ struct TOMLValue {
 
 }
 
-private string formatKey(scope return string str) {
+private string formatKey(scope return string str) pure @safe {
    foreach (c; str) {
       if ((c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z') && c != '-' && c != '_') {
          return formatString(str);
@@ -482,8 +510,9 @@ private string formatKey(scope return string str) {
    return str;
 }
 
-private inout(char)[] formatString(scope return inout(char)[] str) {
+private string formatString(scope return inout(char)[] str) pure @safe {
    Appender!string appender;
+   appender.put('"');
    foreach (c; str) {
       switch (c) {
          case '"':
@@ -511,20 +540,31 @@ private inout(char)[] formatString(scope return inout(char)[] str) {
             appender.put(c);
       }
    }
-   return cast(typeof(return))("\"" ~ appender.data ~ "\"");
+   appender.put('"');
+   return appender.data;
 }
 
 /**
  * Parses a TOML document.
  * Params:
- *  data = String in toml format to parse
+ *  data = String in toml format to parse. Slices out of this will be returned
+ *    _iff_ `unquotedStrings` is enabled in the options and a `string` is passed
+ *    into this function.
  *  options = Parsing option
  *
  * Returns: a TOMLDocument with the parsed data
  * Throws:
  *       TOMLParserException when the document's syntax is incorrect
  */
-TOMLDocument parseTOML(string data, TOMLOptions options = TOMLOptions.none) {
+TOMLDocument parseTOML(scope const(char)[] data, TOMLOptions options = TOMLOptions.none) @safe {
+   return parseTOMLImpl!true(data, options);
+}
+/// ditto
+TOMLDocument parseTOML(scope return string data, TOMLOptions options = TOMLOptions.none) @safe {
+   return parseTOMLImpl!false(data, options);
+}
+
+private TOMLDocument parseTOMLImpl(bool dupData)(scope const(char)[] data, TOMLOptions options = TOMLOptions.none) @safe {
    size_t index = 0;
 
    /**
@@ -557,11 +597,11 @@ TOMLDocument parseTOML(string data, TOMLOptions options = TOMLOptions.none) {
    }
 
    TOMLValue[string] _ret;
-   auto current = &_ret;
+   auto current = (() @trusted => &_ret)();
 
    string[][] tableNames;
 
-   void setImpl(TOMLValue[string]* table, string[] keys, string[] original, TOMLValue value) {
+   void setImpl(scope TOMLValue[string]* table, string[] keys, string[] original, TOMLValue value) {
       auto ptr = keys[0] in *table;
       if (keys.length == 1) {
          // should not be there
@@ -575,7 +615,7 @@ TOMLDocument parseTOML(string data, TOMLOptions options = TOMLOptions.none) {
          } else {
             (*table)[keys[0]] = (TOMLValue[string]).init;
          }
-         setImpl(&((*table)[keys[0]].table()), keys[1 .. $], original, value);
+         setImpl((() @trusted => &((*table)[keys[0]].table()))(), keys[1 .. $], original, value);
       }
    }
 
@@ -675,7 +715,7 @@ TOMLDocument parseTOML(string data, TOMLOptions options = TOMLOptions.none) {
                         break;
                      }
                   }
-                  enforceParser(false, "Invalid escape sequence: '\\" ~ (index < data.length ? [data[index]] : "EOF") ~ "'");
+                  enforceParser(false, "Invalid escape sequence: '\\" ~ (index < data.length ? [cast(immutable) data[index]] : "EOF") ~ "'");
             }
             backslash = false;
          } else {
@@ -740,7 +780,7 @@ TOMLDocument parseTOML(string data, TOMLOptions options = TOMLOptions.none) {
       assert(0);
    }
 
-   string removeUnderscores(string str, string[] ranges...) {
+   const(char)[] removeUnderscores(scope return const(char)[] strInput, scope const(char)[][] ranges...) @safe {
       bool checkRange(char c) {
          foreach (range; ranges) {
             if (c >= range[0] && c <= range[1]) {
@@ -749,6 +789,8 @@ TOMLDocument parseTOML(string data, TOMLOptions options = TOMLOptions.none) {
          }
          return false;
       }
+
+      auto str = strInput;
 
       bool underscore = false;
       for (size_t i = 0; i < str.length; i++) {
@@ -771,7 +813,7 @@ TOMLDocument parseTOML(string data, TOMLOptions options = TOMLOptions.none) {
       while (index < data.length && !"\t\r\n,]}#".canFind(data[index])) {
          index++;
       }
-      string ret = data[start .. index].stripRight(' ');
+      const(char)[] ret = data[start .. index].stripRight(' ');
       enforceParser(ret.length > 0, "Invalid empty value");
       switch (ret) {
          case "true":
@@ -789,7 +831,7 @@ TOMLDocument parseTOML(string data, TOMLOptions options = TOMLOptions.none) {
          case "-nan":
             return TOMLValue(-double.nan);
          default:
-            immutable original = ret;
+            const original = ret;
             try {
                if (ret.length >= 10 && ret[4] == '-' && ret[7] == '-') {
                   // date or datetime
@@ -834,9 +876,12 @@ TOMLDocument parseTOML(string data, TOMLOptions options = TOMLOptions.none) {
             }
             // not a valid value at this point
             if (options & TOMLOptions.unquotedStrings) {
-               return TOMLValue(original);
+               static if (dupData)
+                  return TOMLValue(original.idup);
+               else
+                  return TOMLValue((() @trusted => cast(string) original)());
             } else {
-               error("Invalid type: '" ~ original ~ "'");
+               error(text("Invalid type: '", original.idup, "'"));
             }
             assert(0);
       }
@@ -919,7 +964,7 @@ TOMLDocument parseTOML(string data, TOMLOptions options = TOMLOptions.none) {
                   enforceParser(comma, "Elements of the table must be separated with a comma");
                   auto keys = readKeys();
                   enforceParser(clear!false() && data[index++] == '=' && clear!false(), "Expected value after key declaration");
-                  setImpl(&table, keys, keys, readValue());
+                  setImpl((() @trusted => &table)(), keys, keys, readValue());
                   enforceParser(clear!false(), "Expected ',' or '}' but found " ~ (index < data.length ? "EOL" : "EOF"));
                   if (data[index] == ',') {
                      index++;
@@ -955,9 +1000,10 @@ TOMLDocument parseTOML(string data, TOMLOptions options = TOMLOptions.none) {
       }
    }
 
-   void next() {
+   void next() @safe {
       if (data[index] == '[') {
-         current = &_ret; // reset base
+         // reset base
+         current = (() @trusted => &_ret)();
          index++;
          bool array = false;
          if (index < data.length && data[index] == '[') {
@@ -980,9 +1026,9 @@ TOMLDocument parseTOML(string data, TOMLOptions options = TOMLOptions.none) {
             }
             auto ret = (*current)[key];
             if (ret.type == TOML_TYPE.TABLE) {
-               current = &((*current)[key].table());
+               current = (() @trusted => &((*current)[key].table()))();
             } else if (allowArray && ret.type == TOML_TYPE.ARRAY) {
-               current = &((*current)[key].array[$ - 1].table());
+               current = (() @trusted => &((*current)[key].array[$ - 1].table()))();
             } else {
                error("Invalid type");
             }
@@ -999,7 +1045,7 @@ TOMLDocument parseTOML(string data, TOMLOptions options = TOMLOptions.none) {
             } else {
                set([keys[$ - 1]], TOMLValue([TOMLValue(TOML_TYPE.TABLE)]));
             }
-            current = &((*current)[keys[$ - 1]].array[$ - 1].table());
+            current = (() @trusted => &((*current)[keys[$ - 1]].array[$ - 1].table()))();
          } else {
             update(keys[$ - 1], false);
          }
@@ -1017,7 +1063,7 @@ TOMLDocument parseTOML(string data, TOMLOptions options = TOMLOptions.none) {
 
 }
 
-private @property string stripFirstLine(string data) {
+private @property string stripFirstLine(string data) pure @safe {
    size_t i = 0;
    while (i < data.length && data[i] != '\n') {
       i++;
@@ -1054,7 +1100,7 @@ version (Windows) {
  */
 class TOMLException : Exception {
 
-   public this(string message, string file = __FILE__, size_t line = __LINE__) {
+   public this(string message, string file = __FILE__, size_t line = __LINE__) pure @safe scope {
       super(message, file, line);
    }
 
@@ -1067,7 +1113,7 @@ class TOMLParserException : TOMLException {
 
    private Tuple!(size_t, "line", size_t, "column") _position;
 
-   public this(string message, size_t line, size_t column, string file = __FILE__, size_t _line = __LINE__) {
+   public this(string message, size_t line, size_t column, string file = __FILE__, size_t _line = __LINE__) pure @safe scope {
       super(message ~ " (" ~ to!string(line) ~ ":" ~ to!string(column) ~ ")", file, _line);
       this._position.line = line;
       this._position.column = column;
@@ -1077,7 +1123,7 @@ class TOMLParserException : TOMLException {
     * Gets the position (line and column) where the parsing expection
     * has occured.
     */
-   public pure nothrow @property @safe @nogc auto position() {
+   public pure nothrow @property @safe @nogc auto position() scope {
       return this._position;
    }
 

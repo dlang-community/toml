@@ -52,6 +52,7 @@ JSONValue toJSON(TOMLDocument doc) {
 }
 
 ///
+@safe pure
 unittest {
 
 	import std.datetime : SysTime, Date;
@@ -109,6 +110,7 @@ private TOMLValue[string] toTOMLObject(JSONValue json) {
 }
 
 ///
+@safe pure
 unittest {
 
 	try {
