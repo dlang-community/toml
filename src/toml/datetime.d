@@ -20,7 +20,7 @@ struct DateTime {
    public Date date;
    public TimeOfDay timeOfDay;
 
-@safe scope:
+@safe:
 
    public pure inout @property DateTimeD dateTime() {
       return DateTimeD(this.date, this.timeOfDay.timeOfDay);
@@ -38,7 +38,7 @@ struct DateTime {
       return DateTime(dt.date, TimeOfDay(dt.timeOfDay, frac));
    }
 
-   public pure inout string toISOExtString() {
+   public pure inout string toISOExtString() scope {
       return this.date.toISOExtString() ~ "T" ~ this.timeOfDay.toString();
    }
 
@@ -49,7 +49,7 @@ struct TimeOfDay {
    public TimeOfDayD timeOfDay;
    public Duration fracSecs;
 
-@safe scope:
+@safe:
 
    alias timeOfDay this;
 
@@ -62,7 +62,7 @@ struct TimeOfDay {
       return TimeOfDay(TimeOfDayD.fromISOExtString(str), frac);
    }
 
-   public pure inout string toISOExtString() {
+   public pure inout string toISOExtString() scope {
       immutable msecs = this.fracSecs.total!"msecs";
       if (msecs != 0) {
          return this.timeOfDay.toISOExtString() ~ "." ~ to!string(msecs);

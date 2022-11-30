@@ -661,18 +661,6 @@ unittest {
       assert(v == k.to!int);
    }
 
-   foreach (k, scope v; TOMLValue(["0": 0, "1": 1])) {
-      assert(v == k.to!int);
-   }
-
-   foreach (k, scope const v; TOMLValue(["0": 0, "1": 1])) {
-      assert(v == k.to!int);
-   }
-
-   foreach (k, scope ref v; TOMLValue(["0": 0, "1": 1])) {
-      assert(v == k.to!int);
-   }
-
    foreach (k, const v; const(TOMLValue)(["0": 0, "1": 1])) {
       assert(v == k.to!int);
    }
@@ -681,8 +669,24 @@ unittest {
       assert(v == k.to!int);
    }
 
-   foreach (k, scope ref const v; const(TOMLValue)(["0": 0, "1": 1])) {
-      assert(v == k.to!int);
+   static if (__VERSION__ >= 2098) {
+      mixin(q{
+         foreach (k, scope v; TOMLValue(["0": 0, "1": 1])) {
+            assert(v == k.to!int);
+         }
+
+         foreach (k, scope const v; TOMLValue(["0": 0, "1": 1])) {
+            assert(v == k.to!int);
+         }
+
+         foreach (k, scope ref v; TOMLValue(["0": 0, "1": 1])) {
+            assert(v == k.to!int);
+         }
+
+         foreach (k, scope ref const v; const(TOMLValue)(["0": 0, "1": 1])) {
+            assert(v == k.to!int);
+         }
+      });
    }
 
    value = 42;
