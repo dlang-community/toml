@@ -106,22 +106,6 @@ struct TOMLValue {
    private Store store;
    private TOML_TYPE _type;
 
-   public int opApply(scope int delegate(string, ref TOMLValue) @safe dg) @trusted {
-      return opApplyImpl(cast(OpApplyTableT) dg);
-   }
-
-   public int opApply(scope int delegate(string, ref TOMLValue) @safe pure dg) @trusted pure {
-      return opApplyImpl(cast(OpApplyTableT) dg);
-   }
-
-   public int opApply(scope int delegate(string, ref TOMLValue) @system dg) @system {
-      return opApplyImpl(cast(OpApplyTableT) dg);
-   }
-
-   public int opApply(scope int delegate(string, ref TOMLValue) @system pure dg) @system pure {
-      return opApplyImpl(cast(OpApplyTableT) dg);
-   }
-
 @safe scope:
 
    public this(T)(T value) {
@@ -234,24 +218,7 @@ struct TOMLValue {
       return this.table[key];
    }
 
-   public int opApply(scope int delegate(string, scope ref TOMLValue) @safe dg) @trusted {
-      return opApplyImpl(cast(OpApplyTableT) dg);
-   }
-
-   public int opApply(scope int delegate(string, scope ref TOMLValue) @safe pure dg) @trusted pure {
-      return opApplyImpl(cast(OpApplyTableT) dg);
-   }
-
-   public int opApply(scope int delegate(string, scope ref TOMLValue) @system dg) @system {
-      return opApplyImpl(cast(OpApplyTableT) dg);
-   }
-
-   public int opApply(scope int delegate(string, scope ref TOMLValue) @system pure dg) @system pure {
-      return opApplyImpl(cast(OpApplyTableT) dg);
-   }
-
-   private alias OpApplyTableT = int delegate(string, scope ref TOMLValue) @safe pure;
-   private int opApplyImpl(scope OpApplyTableT dg) @safe pure {
+   private static enum opApplyImpl = q{
       int result;
       foreach (string key, ref value; this.table) {
          result = dg(key, value);
@@ -260,7 +227,32 @@ struct TOMLValue {
          }
       }
       return result;
-   }
+   };
+
+   public int opApply(scope int delegate(string,       ref       TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref       TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   dg)      @safe              { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   dg)      @safe const        { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   dg)      @safe const        { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref       TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref       TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   pure dg) @safe pure         { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @safe   pure dg) @safe pure const   { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @safe   pure dg) @safe pure const   { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref       TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref       TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @system dg)      @system            { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @system dg)      @system const      { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @system dg)      @system const      { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref       TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref       TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @system pure dg) @system pure       { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string,       ref const TOMLValue) @system pure dg) @system pure const { mixin(opApplyImpl); }
+   public int opApply(scope int delegate(string, scope ref const TOMLValue) @system pure dg) @system pure const { mixin(opApplyImpl); }
 
    public void opAssign(T)(T value) pure {
       this.assign(value);
