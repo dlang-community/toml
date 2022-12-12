@@ -42,7 +42,7 @@ $ dub test
 ## Compile and test with reggae
 Firts time:
 ```
-make build
+mkdir build
 cd build
 reggae .. -b ninja
 cd -
