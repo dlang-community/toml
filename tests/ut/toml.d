@@ -103,6 +103,7 @@ unittest {
    doc["bare-key"].should == "value";
    doc["1234"].should == "value";
 }
+
 @("quoted keys")
 @safe
 unittest {
